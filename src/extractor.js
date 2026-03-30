@@ -1,4 +1,4 @@
-// elahmad-extractor.js (Fixed with proper waiting)
+// extractor.js (Fixed with proper waiting)
 const puppeteer = require("puppeteer");
 const fs = require("fs").promises;
 const path = require("path");

@@ -1,12 +1,27 @@
 // Consolidated extraction script to run in browser context
 const EXTRACTION_SCRIPT = () => {
   // Helper: generate unique ID
-  function makeId() {
-    if (typeof crypto !== "undefined" && crypto.randomUUID)
-      return crypto.randomUUID();
-    return `id_${Date.now().toString(36)}_${Math.random()
-      .toString(36)
-      .slice(2, 10)}`;
+  // function makeId() {
+  //   if (typeof crypto !== "undefined" && crypto.randomUUID)
+  //     return crypto.randomUUID();
+  //   return `id_${Date.now().toString(36)}_${Math.random()
+  //     .toString(36)
+  //     .slice(2, 10)}`;
+  // }
+  // Helper: generate consistent ID based on channel properties
+  function makeId(url, name) {
+    // Use stable properties: name + URL (or just URL if available)
+    const stableString = `${name || ""}|${url || ""}`.toLowerCase().trim();
+
+    // Simple hash function (djb2) - produces consistent results
+    let hash = 5381;
+    for (let i = 0; i < stableString.length; i++) {
+      hash = (hash << 5) + hash + stableString.charCodeAt(i);
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+
+    // Return as hex string with prefix
+    return `ch_${Math.abs(hash).toString(16)}`;
   }
 
   // Extract group name from URL or page context
@@ -47,6 +62,7 @@ const EXTRACTION_SCRIPT = () => {
         artonline: "art",
         sports_live_tv: "sports",
         youtube_live: "youtube",
+        "roya-channels-live": "roya",
       };
 
       return groupMap[groupId] || groupId;
@@ -73,6 +89,10 @@ const EXTRACTION_SCRIPT = () => {
     if (pageTitle.includes("Tunisia")) return "tunisia";
     if (pageTitle.includes("UAE")) return "uae";
     if (pageTitle.includes("Yemen")) return "yemen";
+    // Roya
+    if (pageTitle.includes("Roya")) return "roya";
+    // رؤيا
+    if (pageTitle.includes("رؤيا")) return "roya";
 
     return "unknown";
   }
@@ -99,7 +119,7 @@ const EXTRACTION_SCRIPT = () => {
             url: link.href,
             iconUrl: img.src,
             name: link.textContent.trim() || img.alt,
-            id: makeId(),
+            id: makeId(link.href, link.textContent.trim() || img.alt),
             groupName: groupName,
             isFavorite: false,
             source: "mobile-live-stream-alt",
@@ -120,7 +140,7 @@ const EXTRACTION_SCRIPT = () => {
           url: c.href || null,
           iconUrl: img ? img.src : null,
           name: header ? header.textContent.trim() : null,
-          id: makeId(),
+          id: makeId(c.href, header ? header.textContent.trim() : null),
           groupName: groupName,
           isFavorite: false,
           source: "mobile-live-stream",
@@ -146,7 +166,7 @@ const EXTRACTION_SCRIPT = () => {
           url: anchor ? anchor.href : null,
           iconUrl: img ? img.src : null,
           name: img ? img.alt.trim() : null,
-          id: makeId(),
+          id: makeId(anchor ? anchor.href : null, img ? img.alt.trim() : null),
           groupName: groupName,
           isFavorite: false,
           source: "roya-channels",
@@ -242,7 +262,7 @@ const EXTRACTION_SCRIPT = () => {
         seen.add(ch.url);
         return true;
       })
-      .map((ch) => ({ ...ch, id: makeId() }));
+      .map((ch) => ({ ...ch, id: makeId(ch.url, ch.name) }));
   }
 
   // ----- PAGE TYPE DETECTION -----
