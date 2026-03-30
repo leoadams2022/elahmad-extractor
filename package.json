@@ -2,10 +2,10 @@
   "name": "elahmad-tv-extractor",
   "version": "1.0.0",
   "description": "Extract TV channels from elahmad.com",
-  "main": "extractor.js",
+  "main": "./src/extractor.js",
   "scripts": {
-    "start": "node extractor.js",
-    "extract": "node extractor.js"
+    "start": "node ./src/extractor.js",
+    "extract": "node ./src/extractor.js"
   },
   "dependencies": {
     "puppeteer": "^21.11.0"
